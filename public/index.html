@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Home</title>
+
+  <!-- Vue -->
+  <script src="https://unpkg.com/vue@3"></script>
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 { margin-bottom: 30px; }
+
+    .card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 15px;
+      margin: 10px;
+      display: inline-block;
+      min-width: 200px;
+    }
+
+    .value {
+      font-size: 28px;
+      margin-top: 10px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .on { background: #22c55e; }
+    .off { background: #ef4444; }
+  </style>
+</head>
+
+<body>
+<div id="app">
+  <h1>🏠 Умный дом</h1>
+
+  <!-- Датчики -->
+  <div class="card">
+    <div>Температура</div>
+    <div class="value">{{ temperature }} °C</div>
+  </div>
+
+  <div class="card">
+    <div>Влажность</div>
+    <div class="value">{{ humidity }} %</div>
+  </div>
+
+  <div class="card">
+    <div>Движение</div>
+    <div class="value">{{ motion ? "Есть" : "Нет" }}</div>
+  </div>
+
+  <!-- Управление -->
+  <div class="card">
+    <div>Котёл</div>
+    <button
+      :class="boiler ? 'on' : 'off'"
+      @click="toggleBoiler">
+      {{ boiler ? "ВКЛ" : "ВЫКЛ" }}
+    </button>
+  </div>
+
+  <div class="card">
+    <div>Кондиционер</div>
+    <button
+      :class="ac ? 'on' : 'off'"
+      @click="toggleAC">
+      {{ ac ? "ВКЛ" : "ВЫКЛ" }}
+    </button>
+  </div>
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+  data() {
+    return {
+      socket: null,
+      temperature: "--",
+      humidity: "--",
+      motion: 0,
+      boiler: 0,
+      ac: 0
+    };
+  },
+
+  methods: {
+    toggleBoiler() {
+      this.boiler = this.boiler ? 0 : 1;
+      this.socket.emit("command", {
+        topic: "home/boiler/set",
+        value: String(this.boiler)
+      });
+    },
+
+    toggleAC() {
+      this.ac = this.ac ? 0 : 1;
+      this.socket.emit("command", {
+        topic: "home/ac/set",
+        value: String(this.ac)
+      });
+    }
+  },
+
+  mounted() {
+    this.socket = io();
+
+    this.socket.on("mqtt", ({ topic, msg }) => {
+      if (topic === "home/temperature") this.temperature = msg;
+      if (topic === "home/humidity") this.humidity = msg;
+      if (topic === "home/motion") this.motion = Number(msg);
+    });
+  }
+}).mount("#app");
+</script>
+
+</body>
+</html>
