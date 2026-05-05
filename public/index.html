@@ -79,6 +79,22 @@ button {
 </div>
 
 <div class="card">
+  <div>Свет режим</div>
+  <button @click="toggleLightMode"
+          :class="light_mode ? 'on':'off'">
+    {{ light_mode ? "AUTO" : "MANUAL" }}
+  </button>
+</div>
+
+<div class="card">
+  <div>Климат режим</div>
+  <button @click="toggleClimateMode"
+          :class="climate_mode ? 'on':'off'">
+    {{ climate_mode ? "AUTO" : "MANUAL" }}
+  </button>
+</div>
+
+<div class="card">
   <div>Кондиционер</div>
   <button :class="ac ? 'on':'off'" @click="toggleAC">
     {{ ac ? "ВКЛ" : "ВЫКЛ" }}
@@ -133,6 +149,8 @@ data() {
     humidifier: 0,
 
     light: 0,
+    light_mode: 1,
+    climate_mode: 0,
     curtain: 90
   };
 },
@@ -148,7 +166,15 @@ methods: {
     this.ac ^= 1;
     this.send("home/living/ac/set", this.ac);
   },
+  toggleLightMode() {
+  this.light_mode ^= 1;
+  this.send("home/living/light/mode", this.light_mode);
+  },
 
+  toggleClimateMode() {
+    this.climate_mode ^= 1;
+    this.send("home/climate/mode", this.climate_mode);
+  },
   toggleHumidifier() {
     this.humidifier ^= 1;
     this.send("home/bedroom/humidifier/set", this.humidifier);
@@ -181,7 +207,11 @@ mounted() {
     if (topic === "home/living/motion") this.motion = Number(msg);
 
     if (topic === "home/living/light/state") this.light = Number(msg);
+    if (topic === "home/living/light/mode/state")
+      this.light_mode = Number(msg);
 
+    if (topic === "home/living/climate/mode/state")
+      this.climate_mode = Number(msg);
     // Кондиционер
     if (topic === "home/living/ac/state") this.ac = Number(msg);
 
