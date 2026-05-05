@@ -1,136 +1,203 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Smart Home</title>
+<meta charset="UTF-8">
+<title>Smart Home</title>
 
-  <!-- Vue -->
-  <script src="https://unpkg.com/vue@3"></script>
-  <script src="/socket.io/socket.io.js"></script>
+<script src="https://unpkg.com/vue@3"></script>
+<script src="/socket.io/socket.io.js"></script>
 
-  <style>
-    body {
-      font-family: Arial;
-      background: #0f172a;
-      color: white;
-      text-align: center;
-      margin: 0;
-      padding: 20px;
-    }
+<style>
+body {
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+  text-align: center;
+}
 
-    h1 { margin-bottom: 30px; }
+h2 {
+  margin-top: 40px;
+}
 
-    .card {
-      background: #1e293b;
-      padding: 20px;
-      border-radius: 15px;
-      margin: 10px;
-      display: inline-block;
-      min-width: 200px;
-    }
+.card {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 15px;
+  margin: 10px;
+  display: inline-block;
+  min-width: 200px;
+}
 
-    .value {
-      font-size: 28px;
-      margin-top: 10px;
-    }
+.value {
+  font-size: 24px;
+}
 
-    button {
-      margin-top: 15px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      color: white;
-    }
+button {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  color: white;
+}
 
-    .on { background: #22c55e; }
-    .off { background: #ef4444; }
-  </style>
+.on { background: green; }
+.off { background: red; }
+
+.slider {
+  width: 150px;
+}
+</style>
 </head>
 
 <body>
 <div id="app">
-  <h1>🏠 Умный дом</h1>
+<h1>🏠 Умный дом</h1>
 
-  <!-- Датчики -->
-  <div class="card">
-    <div>Температура</div>
-    <div class="value">{{ temperature }} °C</div>
-  </div>
+<!-- 🛋 ГОСТИНАЯ -->
+<h2>🛋 Гостиная</h2>
 
-  <div class="card">
-    <div>Влажность</div>
-    <div class="value">{{ humidity }} %</div>
-  </div>
+<div class="card">
+  <div>Температура</div>
+  <div class="value">{{ temperature }} °C</div>
+</div>
 
-  <div class="card">
-    <div>Движение</div>
-    <div class="value">{{ motion ? "Есть" : "Нет" }}</div>
-  </div>
+<div class="card">
+  <div>Влажность</div>
+  <div class="value">{{ humidity }} %</div>
+</div>
 
-  <!-- Управление -->
-  <div class="card">
-    <div>Котёл</div>
-    <button
-      :class="boiler ? 'on' : 'off'"
-      @click="toggleBoiler">
-      {{ boiler ? "ВКЛ" : "ВЫКЛ" }}
-    </button>
-  </div>
+<div class="card">
+  <div>Движение</div>
+  <div class="value">{{ motion ? "Есть" : "Нет" }}</div>
+</div>
 
-  <div class="card">
-    <div>Кондиционер</div>
-    <button
-      :class="ac ? 'on' : 'off'"
-      @click="toggleAC">
-      {{ ac ? "ВКЛ" : "ВЫКЛ" }}
-    </button>
-  </div>
+<div class="card">
+  <div>Свет</div>
+  <input type="range" min="0" max="255" v-model="light" @input="setLight" class="slider">
+  <div>{{ light }}</div>
+</div>
+
+<div class="card">
+  <div>Кондиционер</div>
+  <button :class="ac ? 'on':'off'" @click="toggleAC">
+    {{ ac ? "ВКЛ" : "ВЫКЛ" }}
+  </button>
+</div>
+
+<!-- 🛏 СПАЛЬНЯ -->
+<h2>🛏 Спальня</h2>
+
+<div class="card">
+  <div>Увлажнитель</div>
+  <button :class="humidifier ? 'on':'off'" @click="toggleHumidifier">
+    {{ humidifier ? "ВКЛ" : "ВЫКЛ" }}
+  </button>
+</div>
+
+<!-- 🍳 КУХНЯ -->
+<h2>🍳 Кухня</h2>
+
+<div class="card">
+  <div>Жалюзи</div>
+  <input type="range" min="0" max="180" v-model="curtain" @input="setCurtain" class="slider">
+  <div>{{ curtain }}°</div>
+</div>
+
+<!-- 🏠 ОБЩЕЕ -->
+<h2>🏠 Дом</h2>
+
+<div class="card">
+  <div>Котёл</div>
+  <button :class="boiler ? 'on':'off'" @click="toggleBoiler">
+    {{ boiler ? "ВКЛ" : "ВЫКЛ" }}
+  </button>
+</div>
+
 </div>
 
 <script>
 const { createApp } = Vue;
 
 createApp({
-  data() {
-    return {
-      socket: null,
-      temperature: "--",
-      humidity: "--",
-      motion: 0,
-      boiler: 0,
-      ac: 0
-    };
+data() {
+  return {
+    socket: null,
+
+    temperature: "--",
+    humidity: "--",
+    motion: 0,
+
+    boiler: 0,
+    ac: 0,
+    humidifier: 0,
+
+    light: 0,
+    curtain: 90
+  };
+},
+
+methods: {
+
+  toggleBoiler() {
+    this.boiler ^= 1;
+    this.send("home/boiler/set", this.boiler);
   },
 
-  methods: {
-    toggleBoiler() {
-      this.boiler = this.boiler ? 0 : 1;
-      this.socket.emit("command", {
-        topic: "home/boiler/set",
-        value: String(this.boiler)
-      });
-    },
-
-    toggleAC() {
-      this.ac = this.ac ? 0 : 1;
-      this.socket.emit("command", {
-        topic: "home/ac/set",
-        value: String(this.ac)
-      });
-    }
+  toggleAC() {
+    this.ac ^= 1;
+    this.send("home/living/ac/set", this.ac);
   },
 
-  mounted() {
-    this.socket = io();
+  toggleHumidifier() {
+    this.humidifier ^= 1;
+    this.send("home/bedroom/humidifier/set", this.humidifier);
+  },
 
-    this.socket.on("mqtt", ({ topic, msg }) => {
-      if (topic === "home/temperature") this.temperature = msg;
-      if (topic === "home/humidity") this.humidity = msg;
-      if (topic === "home/motion") this.motion = Number(msg);
+  setLight() {
+    this.send("home/living/light/set", this.light);
+  },
+
+  setCurtain() {
+    this.send("home/kitchen/curtain/set", this.curtain);
+  },
+
+  send(topic, value) {
+    this.socket.emit("command", {
+      topic,
+      value: String(value)
     });
   }
+},
+
+mounted() {
+  this.socket = io();
+
+  this.socket.on("mqtt", ({ topic, msg }) => {
+
+    // Гостиная
+    if (topic === "home/living/temperature") this.temperature = msg;
+    if (topic === "home/living/humidity") this.humidity = msg;
+    if (topic === "home/living/motion") this.motion = Number(msg);
+
+    if (topic === "home/living/light/state") this.light = Number(msg);
+
+    // Кондиционер
+    if (topic === "home/living/ac/state") this.ac = Number(msg);
+
+    // Спальня
+    if (topic === "home/bedroom/humidifier/state")
+      this.humidifier = Number(msg);
+
+    // Кухня
+    if (topic === "home/kitchen/curtain/state")
+      this.curtain = Number(msg);
+
+    // Дом
+    if (topic === "home/boiler/state")
+      this.boiler = Number(msg);
+  });
+}
 }).mount("#app");
 </script>
 

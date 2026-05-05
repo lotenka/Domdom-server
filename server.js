@@ -18,6 +18,7 @@ mqttClient.on("connect", () => {
 // MQTT → Web
 mqttClient.on("message", (topic, message) => {
     const msg = message.toString();
+    console.log("MQTT:", topic, msg); // ← добавь это
     io.emit("mqtt", { topic, msg });
 });
 
