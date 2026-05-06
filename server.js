@@ -22,10 +22,13 @@ mqttClient.on("message", (topic, message) => {
     io.emit("mqtt", { topic, msg });
 });
 
+
 // Web → MQTT
 io.on("connection", (socket) => {
     socket.on("command", ({ topic, value }) => {
+        console.log("SEND:", topic, value);  // лог
         mqttClient.publish(topic, value);
+        
     });
 });
 

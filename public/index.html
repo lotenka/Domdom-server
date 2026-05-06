@@ -79,17 +79,19 @@ button {
 </div>
 
 <div class="card">
-  <div>Свет режим</div>
-  <button @click="toggleLightMode"
-          :class="light_mode ? 'on':'off'">
+  <div>Режим света</div>
+  <button
+    :class="light_mode ? 'on' : 'off'"
+    @click="toggleLightMode">
     {{ light_mode ? "AUTO" : "MANUAL" }}
   </button>
 </div>
 
 <div class="card">
-  <div>Климат режим</div>
-  <button @click="toggleClimateMode"
-          :class="climate_mode ? 'on':'off'">
+  <div>Режим климата</div>
+  <button
+    :class="climate_mode ? 'on' : 'off'"
+    @click="toggleClimateMode">
     {{ climate_mode ? "AUTO" : "MANUAL" }}
   </button>
 </div>
@@ -167,13 +169,21 @@ methods: {
     this.send("home/living/ac/set", this.ac);
   },
   toggleLightMode() {
-  this.light_mode ^= 1;
-  this.send("home/living/light/mode", this.light_mode);
+    this.light_mode = this.light_mode ? 0 : 1;
+
+    this.socket.emit("command", {
+      topic: "home/living/light/mode/set",
+      value: String(this.light_mode)
+    });
   },
 
   toggleClimateMode() {
-    this.climate_mode ^= 1;
-    this.send("home/climate/mode", this.climate_mode);
+    this.climate_mode = this.climate_mode ? 0 : 1;
+
+    this.socket.emit("command", {
+      topic: "home/living/climate/mode/set",
+      value: String(this.climate_mode)
+    });
   },
   toggleHumidifier() {
     this.humidifier ^= 1;
