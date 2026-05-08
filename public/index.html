@@ -74,7 +74,7 @@ button {
 
 <div class="card">
   <div>Свет</div>
-  <input type="range" min="0" max="255" v-model="light" @input="setLight" class="slider">
+  <input type="range" min="0" max="255" v-model="light" @change="setLight" class="slider">
   <div>{{ light }}</div>
 </div>
 
@@ -118,7 +118,7 @@ button {
 
 <div class="card">
   <div>Жалюзи</div>
-  <input type="range" min="0" max="180" v-model="curtain" @input="setCurtain" class="slider">
+  <input type="range" min="0" max="180" v-model="curtain" @change="setCurtain" class="slider">
   <div>{{ curtain }}°</div>
 </div>
 
