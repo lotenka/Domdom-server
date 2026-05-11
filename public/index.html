@@ -44,6 +44,11 @@ button {
 .on { background: green; }
 .off { background: red; }
 
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .slider {
   width: 150px;
 }
@@ -98,8 +103,10 @@ button {
 
 <div class="card">
   <div>Кондиционер</div>
-  <button :class="ac ? 'on':'off'" @click="toggleAC">
-    {{ ac ? "ВКЛ" : "ВЫКЛ" }}
+  <button
+  :disabled="climate_mode == 0"
+  :class="ac ? 'on':'off'"
+  @click="toggleAC">
   </button>
 </div>
 
@@ -127,8 +134,10 @@ button {
 
 <div class="card">
   <div>Котёл</div>
-  <button :class="boiler ? 'on':'off'" @click="toggleBoiler">
-    {{ boiler ? "ВКЛ" : "ВЫКЛ" }}
+<button
+  :disabled="climate_mode == 0"
+  :class="boiler ? 'on':'off'"
+  @click="toggleBoiler">
   </button>
 </div>
 
