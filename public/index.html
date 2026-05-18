@@ -78,6 +78,21 @@ button:disabled {
 </div>
 
 <div class="card">
+  <div>Желаемая температура</div>
+
+  <input
+    type="range"
+    min="5"
+    max="40"
+    step="1"
+    v-model="target_temp"
+    @change="setTargetTemp"
+    class="slider">
+
+  <div>{{ target_temp }} °C</div>
+</div>
+
+<div class="card">
   <div>Свет</div>
   <input type="range" min="0" max="255" v-model="light" @change="setLight" class="slider">
   <div>{{ light }}</div>
@@ -154,6 +169,7 @@ data() {
     temperature: "--",
     humidity: "--",
     motion: 0,
+    target_temp: 25,
 
     boiler: 0,
     ac: 0,
@@ -199,6 +215,13 @@ methods: {
     this.send("home/bedroom/humidifier/set", this.humidifier);
   },
 
+  setTargetTemp() {
+    this.socket.emit("command", {
+      topic: "home/living/climate/target/set",
+      value: String(this.target_temp)
+    });
+  },
+
   setLight() {
     this.send("home/living/light/set", this.light);
   },
@@ -231,6 +254,8 @@ mounted() {
 
     if (topic === "home/living/climate/mode/state")
       this.climate_mode = Number(msg);
+    if (topic === "home/living/climate/target/state")
+      this.target_temp = Number(msg);
     // Кондиционер
     if (topic === "home/living/ac/state") this.ac = Number(msg);
 
